@@ -1,0 +1,9 @@
+"gakgame"
+{
+	"base"		    "base"
+	"title"		    "Gaks Game"
+	"maps"		    ""
+	"category"	    "pve"
+	"menusystem"	"1"
+	"workshopid"	""
+}
