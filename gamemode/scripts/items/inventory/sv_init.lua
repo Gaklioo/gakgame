@@ -100,9 +100,7 @@ net.Receive("GakGame_AddInventoryItem", function(len, ply)
     local itm = util.JSONToTable(itmStr)
 
     if gItems.CheckItem(itm) then
-        ply:AddItem(itm)
-    else
-        
+        ply:AddItem(itm)        
     end
 end)
 
@@ -115,9 +113,7 @@ function gItems.P:AddItem(item)
     if not item then return end
 
     local id = item.id
-    if not gItems.ItemList[id] then 
-        return
-    end
+    if not gItems.ItemList[id] then return end
 
     local weight = 0
 
@@ -130,13 +126,13 @@ function gItems.P:AddItem(item)
         net.Start("GakGame_Notify")
         net.WriteString(str)
         net.Send(self)
-        return 
     else
-        if self.Inventory[item.id] then
-            self.Inventory[item.id].count = (self.Inventory[item.id].count or 1) + 1
+        if self.Inventory[id] then
+            self.Inventory[id].count = (self.Inventory[id].count or 1) + 1
         else
-            item.count = 1
-            self.Inventory[item.id] = item
+            local newItem = table.Copy(gItems.ItemList[id])
+            newItem.count = 1
+            self.Inventory[id] = newItem
         end
     end
 
@@ -148,7 +144,16 @@ function gItems.P:PrintInventory()
     PrintTable(self.Inventory)
 end
 
+function gItems.P:GetInventory()
+    return self.Inventory
+end
+
+function gItems.P:ResetInventory()
+    self.Inventory = {}
+end
+
 function gItems.P:UseItem(itemID)
+    local item = self.Inventory[itemID]
     if not self.Inventory[itemID] then
         local str = "Unable to remove item, item not found in inventory"
         net.Start("GakGame_Notify")
@@ -166,10 +171,10 @@ function gItems.P:UseItem(itemID)
     end
 
     gItems.ItemList[itemID].use(self)
-    if self.Inventory[itemID].count == 1 then
+    if item.count == 1 then
         self.Inventory[itemID] = nil 
     else
-        self.Inventory[itemID].count = self.Inventory[itemID].count - 1
+        item.count = item.count - 1
     end
 end
 
@@ -201,7 +206,5 @@ net.Receive("GakGame_UseItem", function(len, ply)
     local str = net.ReadString()
     local tbl = util.JSONToTable(str)
 
-    print("HI")
-    print(str)
     ply:UseItem(tbl.id)
 end)

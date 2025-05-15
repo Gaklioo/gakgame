@@ -24,11 +24,26 @@ function ENT:SetContents(table)
 end
 
 function ENT:CheckItem(item)
+    for _, v in pairs(self.Contents) do
+        if item.id == v.id then
+            return true
+        end
+    end
 
+    return false
 end
 
 function ENT:TakeItem(item)
+    for _, v in pairs(self.Contents) do
+        if item.id == v.id then
+            v.count = v.count - 1
 
+            if v.count <= 0 then
+                self.Contents[v] = nil
+            end
+            return
+        end
+    end
 end
 
 
@@ -64,7 +79,32 @@ net.Receive("GakGame_TakeBackpackItem", function(len, ply)
 
     ent:TakeItem(item)
     ply:AddItem(item)
+end)
 
+local function printInv(inv)
+    for _, v in pairs(inv) do
+        PrintTable(v)
+    end
+end
 
+--Right now there is a bug here, that if you die by cyanide that cyanide is put into the bag instead of being used so just wait a second
+hook.Add("PlayerDeath", "GakGame_CreateBackpack", function(ply)
+    if not ply:IsPlayer() then return end
 
+    local inv = ply:GetInventory()
+    printInv(inv)
+    ply:ResetInventory()
+    local pos = ply:GetPos() + Vector(0, 0, 10)
+    local ang = ply:GetAngles()
+
+    local backpack = ents.Create("droppedbackpack")
+    backpack:SetPos(pos)
+    backpack:SetAngles(ang)
+    backpack:SetContents(inv)
+
+    backpack:Spawn()
+
+    timer.Simple(600, function()
+        backpack:Remove()
+    end)
 end)

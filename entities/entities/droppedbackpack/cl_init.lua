@@ -45,15 +45,18 @@ function gDroppedBackpack.OpenPanel(tbl)
 
         take.DoClick = function()
             local storedItem = pnl:GetStoredItem()
+            PrintTable(storedItem)
             local str = util.TableToJSON(storedItem)
             net.Start("GakGame_TakeBackpackItem")
             net.WriteString(str)
             net.WriteEntity(gDroppedBackpack.Entity)
-            net.Send()
+            net.SendToServer()
         end
 
         local img = vgui.Create("DImage", pnl)
         img:Dock(FILL)
+
+        scrl:AddItem(pnl)
 
     end
 
