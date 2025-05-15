@@ -60,8 +60,8 @@ gSkillTree.AbilityFunctions = {
             class.WalkSpeed = class.WalkSpeed + (level * 10)
         end,
         ["Higher Carrying Capacity"] = function(class, level)
-            if not class.CarryCapactiy then class.CarryCapacity = 150 end
-            class.CarryCapacity = class.CarryCapactity + (class.CarryCapacity * (level / 10))
+            if not class.CarryCapacity then class.CarryCapacity = 150 end
+            class.CarryCapacity = class.CarryCapacity + (class.CarryCapacity * (level / 10))
         end
     }
 
