@@ -41,7 +41,8 @@ function gDroppedBackpack.OpenPanel(tbl)
         pnl:SetStoredItem(v)
 
         local take = vgui.Create("DButton", pnl)
-        take:Dock(LEFT)
+        take:SetText("Take")
+        take:Dock(RIGHT)
 
         take.DoClick = function()
             local storedItem = pnl:GetStoredItem()
@@ -51,10 +52,18 @@ function gDroppedBackpack.OpenPanel(tbl)
             net.WriteString(str)
             net.WriteEntity(gDroppedBackpack.Entity)
             net.SendToServer()
+
+            gDroppedBackpack.Panel:Remove()
         end
+
+        local text = vgui.Create("DLabel", pnl)
+        text:SetText(v.name)
+        text:Dock(RIGHT)
+        text:Center()   
 
         local img = vgui.Create("DImage", pnl)
         img:Dock(FILL)
+        img:SetImage(v.icon)
 
         scrl:AddItem(pnl)
 

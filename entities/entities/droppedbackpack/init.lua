@@ -34,18 +34,25 @@ function ENT:CheckItem(item)
 end
 
 function ENT:TakeItem(item)
-    for _, v in pairs(self.Contents) do
+    for k, v in pairs(self.Contents) do
         if item.id == v.id then
             v.count = v.count - 1
 
             if v.count <= 0 then
-                self.Contents[v] = nil
+                self.Contents[k] = nil
             end
             return
         end
     end
 end
 
+function ENT:Think()
+    if table.IsEmpty(self.Contents) then
+        self:Remove()
+    end
+
+    self:NextThink(CurTime() + 10)
+end
 
 util.AddNetworkString("GakGame_DeadInvOpen")
 function ENT:Use(act)
@@ -79,6 +86,8 @@ net.Receive("GakGame_TakeBackpackItem", function(len, ply)
 
     ent:TakeItem(item)
     ply:AddItem(item)
+
+
 end)
 
 local function printInv(inv)
@@ -87,24 +96,34 @@ local function printInv(inv)
     end
 end
 
---Right now there is a bug here, that if you die by cyanide that cyanide is put into the bag instead of being used so just wait a second
 hook.Add("PlayerDeath", "GakGame_CreateBackpack", function(ply)
-    if not ply:IsPlayer() then return end
+    timer.Simple(1, function()
+        if not IsValid(ply) then return end
+        if not ply:IsPlayer() then return end
 
-    local inv = ply:GetInventory()
-    printInv(inv)
-    ply:ResetInventory()
-    local pos = ply:GetPos() + Vector(0, 0, 10)
-    local ang = ply:GetAngles()
+        local inv = ply:GetInventory()
+        printInv(inv)
 
-    local backpack = ents.Create("droppedbackpack")
-    backpack:SetPos(pos)
-    backpack:SetAngles(ang)
-    backpack:SetContents(inv)
+        if table.IsEmpty(inv) then
+            ply:ResetInventory()
+            return
+        end
 
-    backpack:Spawn()
+        ply:ResetInventory()
+        local pos = ply:GetPos() + Vector(0, 0, 10)
+        local ang = ply:GetAngles()
 
-    timer.Simple(600, function()
-        backpack:Remove()
+        local backpack = ents.Create("droppedbackpack")
+        backpack:SetPos(pos)
+        backpack:SetAngles(ang)
+        backpack:SetContents(inv)
+
+        backpack:Spawn()
+
+        timer.Simple(600, function()
+            if IsValid(backpack) then
+                backpack:Remove()
+            end
+        end)
     end)
 end)

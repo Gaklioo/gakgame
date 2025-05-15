@@ -82,7 +82,8 @@ function gItems.openGUI()
 
         if v.icon then
             local img = vgui.Create("DImage", panel)
-            img:Dock(FILL)
+            img:Dock(LEFT)
+            img:SetSize(x / 10, y)
             img:SetImage(v.icon)
         end
 

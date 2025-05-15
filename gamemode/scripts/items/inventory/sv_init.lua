@@ -176,6 +176,8 @@ function gItems.P:UseItem(itemID)
     else
         item.count = item.count - 1
     end
+
+    self:SyncInventory()
 end
 
 function gItems.P:SaveInventory()
