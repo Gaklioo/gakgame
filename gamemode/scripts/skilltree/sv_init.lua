@@ -31,7 +31,26 @@ hook.Add("GakGame_InitializeSQL", "GakGame_SetupSkillTreeSQL", function()
             print("Created Table", gSkillTree.Database)
         sql.Commit()
     end
+
+    gSkillTree.SetupXPHooks()
 end)
+
+function gSkillTree.SetupXPHooks()
+    for hookName, hookEntires in pairs(gSkillTree.XPHooks) do
+        hook.Add(hookName, "GakGame_XPHook_" .. hookName, function(...)
+            local args = {...}
+
+            for _, entry in ipairs(hookEntires) do
+                local target = args[entry.args]
+
+                if IsValid(target) and target:IsPlayer() then
+                    local id = target:SteamID()
+                    hook.Run("GakGame_GiveSkillTreeXP", target, entry.xpGiven)
+                end
+            end
+        end)
+    end
+end
 
 function gSkillTree.P:LoadTree()
     local id = self:SteamID()
@@ -92,8 +111,6 @@ function gSkillTree.P:PrintStats()
     for _, entry in ipairs(cache.abilities) do
         print(string.format("Category: %s | Ability: %s | Level: %d", entry.category, entry.ability, entry.level))
     end
-
-    print("XP " .. cache.xp)
 end
 
 function gSkillTree.P:GetNextLevel(ability)
@@ -148,8 +165,6 @@ net.Receive("GakGame_SkillTreeUpgrade", function(len, ply)
     local ability = net.ReadString()
     local level = net.ReadInt(32)
     local id = ply:SteamID()
-    print(ability)
-    print(level)
 
     local cache = gSkillTree.PlayerCache[id]
 
@@ -201,7 +216,10 @@ hook.Add("GakGame_GiveSkillTreeXP", "GakGame_SkillTreeXPAdder", function(ply, am
 
     local cache = gSkillTree.PlayerCache[id]
 
-    cache.xp = cache.xp + amt 
+    cache.xp = cache.xp + amt
+    gSkillTree.PlayerCache[id].xp = cache.xp
+    
+    hook.Run("GakGame_NotifyPlayer", ply, string.format("Xp Given: %s", tonumber(amt)))
 end)
 
 hook.Add("GakGame_GetMaxWeight", "GakGame_ServerMaxWeight", function(ply)

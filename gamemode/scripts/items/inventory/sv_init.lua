@@ -137,7 +137,6 @@ function gItems.P:AddItem(item)
         end
     end
 
-    self:PrintInventory()
     self:SyncInventory()
 end
 

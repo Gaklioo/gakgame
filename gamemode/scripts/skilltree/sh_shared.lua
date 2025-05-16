@@ -108,13 +108,14 @@ gSkillTree.Abilities = {
 }
 
 --Anything that gives XP is in here
---Assume that there is at least one argument that is the player, which is all we care about
+--args is important, it is the index of the argument that you want to give xp to, ae the player 
+--PlayerDeath hook = PlayerDeath(victim, inflictor, attacker), if we set args = 1, then the victim gets xp     
 gSkillTree.XPHooks = {
     ["EntityTakeDamage"] = {
-        {args = {target, dmgInfo}, xpGiven = 10}
+        {args = 1, xpGiven = 10}
     },
     ["PlayerDeath"] = {
-        {args = {victim, inflictor, attacker}, xpGiven = 50}
+        {args = 1, xpGiven = 50}
     }
 }
 
