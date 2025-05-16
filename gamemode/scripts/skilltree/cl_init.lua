@@ -13,6 +13,12 @@ function gSkillTree.openPanel(data)
     gSkillTree.Panel:SetDraggable(false)
     gSkillTree.Panel:MakePopup()
 
+    local curXP = vgui.Create("DLabel", gSkillTree.Panel)
+    local curXpStr = string.format("Current XP: %d", tonumber(data.xp))
+    curXP:SetText(curXpStr)
+    local x, y = curXP:GetTextSize()
+    curXP:SetSize(x, y)
+
     gSkillTree.Panel.Paint = function(self, w, h)
         draw.RoundedBox(2, 0, 0, w, h, Color(0, 0, 0, 180))
     end
@@ -32,11 +38,11 @@ function gSkillTree.openPanel(data)
             collapsibleCategory:SetLabel(category)
             collapsibleCategory:SetExpanded(false)
             collapsibleCategory:Dock(TOP)
-            collapsibleCategory:DockPadding(5, 5, 5, 5)
+
 
             local contentPanel = vgui.Create("DPanel", collapsibleCategory)
             contentPanel:SetTall(0)
-            contentPanel:Dock(TOP)
+            contentPanel:Dock(FILL)
             contentPanel:DockPadding(5, 5, 5, 5)
 
             collapsibleCategory:SetContents(contentPanel)
@@ -51,10 +57,22 @@ function gSkillTree.openPanel(data)
         abilityPanel:SetTall(30)
         abilityPanel:Center()
 
+        local upgradeButton = vgui.Create("DButton", abilityPanel)
+        upgradeButton:SetText("Upgrade")
+        upgradeButton:Dock(RIGHT)
+
         local abilityLabel = vgui.Create("DLabel", abilityPanel)
         abilityLabel:SetText(entry.ability .. " (Level " .. entry.level .. ")")
-        abilityLabel:Dock(TOP)
+        abilityLabel:Dock(FILL)
         abilityLabel:SetContentAlignment(5)
+
+        upgradeButton.DoClick = function()
+            net.Start("GakGame_SkillTreeUpgrade")
+            net.WriteString(category)
+            net.WriteString(entry.ability)
+            net.WriteUInt(entry.level, 32)
+            net.SendToServer()
+        end
 
         abilityLabel.Paint = function(self, w, h)
             draw.RoundedBox(2, 0, 0, w, h, Color(0, 0, 0, 180))

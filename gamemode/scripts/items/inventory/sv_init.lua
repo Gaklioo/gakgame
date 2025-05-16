@@ -120,8 +120,9 @@ function gItems.P:AddItem(item)
     for k, v in pairs(self.Inventory) do
         weight = weight + (v.weight * (v.count or 1))
     end
+    local maxWeight = self:GetMaxWeight()
 
-    if (item.weight + weight) > gItems.MaxWeight then
+    if (item.weight + weight) > maxWeight then
         local str = "Unable to add item to inventory, to heavy"
         net.Start("GakGame_Notify")
         net.WriteString(str)

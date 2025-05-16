@@ -96,6 +96,16 @@ function gSkillTree.P:PrintStats()
     print("XP " .. cache.xp)
 end
 
+function gSkillTree.P:GetNextLevel(ability)
+    local cache = gSkillTree.PlayerCache[self:SteamID()]
+
+    for _, entry in ipairs(cache.abilities) do
+        if entry.ability == ability then
+            return entry.level + 1
+        end
+    end
+end
+
 function gSkillTree.P:SaveTree()
     local id = self:SteamID()
     if not gSkillTree.PlayerCache[id] then return end
@@ -126,7 +136,7 @@ function gSkillTree.P:GiveXP(xp)
 end
 
 function gSkillTree.CheckFake(ply)
-    if not Isvalid(ply) then return true end
+    if not IsValid(ply) then return true end
     if not ply:IsPlayer() then return true end
     if not gSkillTree.PlayerCache[ply:SteamID()] then return true end
 end
@@ -134,26 +144,37 @@ end
 util.AddNetworkString("GakGame_SkillTreeUpgrade")
 net.Receive("GakGame_SkillTreeUpgrade", function(len, ply)
     if gSkillTree.CheckFake(ply) then return end
-
     local category = net.ReadString()
     local ability = net.ReadString()
     local level = net.ReadInt(32)
     local id = ply:SteamID()
+    print(ability)
+    print(level)
 
     local cache = gSkillTree.PlayerCache[id]
 
-    if not cache then return end
-    if not gSkillTree.Abilities[category] then return end
-    if not gSkillTree.Abilities[category][ability] then return end
+    if not cache then hook.Run("GakGame_NotifyPlayer", ply, "Not found in server") return end
+    if not gSkillTree.Abilities[category] then hook.Run("GakGame_NotifyPlayer", ply, "Category not found") return end
+    local found = false 
+    for _, name in ipairs(gSkillTree.Abilities[category]) do
+        if name == ability then found = true end
+    end
+
+    local nextLevel = ply:GetNextLevel(ability)
+
+    if not found then hook.Run("GakGame_NotifyPlayer", ply, "Ability not found") return end
+    if nextLevel != (level + 1) then hook.Run("GakGame_NotifyPlayer", ply, "Level requested is not linear")return end
     
 
     for _, entry in ipairs(cache.abilities) do
         if entry.category == category and entry.ability == ability then
-            local requiredXp = gSkillTree.GetXpRequired(entry.level)
+            local requiredXp = gSkillTree.GetXpRequired(nextLevel)
 
-            if cache.xp >= requiredXp and entry.level < gSkillTree.MaxLevel then
+            if tonumber(cache.xp) >= requiredXp and entry.level < gSkillTree.MaxLevel then
                 cache.xp = cache.xp - requiredXp
                 entry.level = entry.level + 1
+            else
+                hook.Run("GakGame_NotifyPlayer", ply, "Not enough XP to upgrade")
             end
         end
     end
