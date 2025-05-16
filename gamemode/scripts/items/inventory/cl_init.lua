@@ -25,32 +25,19 @@ end)
 
 function gItems.openGUI()
     local x, y = ScrW(), ScrH()
-    gItems.Panel = vgui.Create("DFrame")
+    gItems.Panel = vgui.Create("gakFrame")
     gItems.Panel:SetSize(x, y)
-    gItems.Panel:SetTitle("")
-    gItems.Panel:Center()
-    gItems.Panel:SetDraggable(false)
-    gItems.Panel:ShowCloseButton(false)
+    gItems.Panel:DrawNoHeader()
 
-    gItems.Panel:MakePopup()
-
-    gItems.Panel.Paint = function(self, w, h)
-        draw.RoundedBox(2, 0, 0, x, y, Color(0, 0, 0, 180))
-    end
-
-    local invPanel = vgui.Create("DPanel", gItems.Panel)
+    local invPanel = vgui.Create("gakPanel", gItems.Panel)
     invPanel:SetSize(x / 3, y / 1.2)
     invPanel:SetPos(x / 20, y / 10)
-
-    invPanel.Paint = function(self, w, h)
-        draw.RoundedBox(2, 0, 0, w, h, Color(0, 0, 0, 200))
-    end
 
     local inv = vgui.Create("DScrollPanel", invPanel)
     inv:Dock(FILL)
 
     for k, v in pairs(LocalPlayer():GetInventory()) do
-        local panel = vgui.Create("DPanel")
+        local panel = vgui.Create("gakPanel")
         panel:Dock(FILL)
         panel:SetHeight(y / 10)
 
@@ -58,17 +45,17 @@ function gItems.openGUI()
             draw.RoundedBox(2, 0, 0 , w, h, Color(180, 180, 180, 220))
         end
 
-        local buttonPanel = vgui.Create("DPanel", panel)
+        local buttonPanel = vgui.Create("gakPanel", panel)
         buttonPanel:Dock(RIGHT)
         buttonPanel:SetWidth(x / 20)
         buttonPanel:SetHeight(panel:GetTall())
 
-        local drop = vgui.Create("DButton", buttonPanel)
+        local drop = vgui.Create("gakButton", buttonPanel)
         drop:SetText("Drop")
         drop:Dock(TOP)
         drop:SetTall(buttonPanel:GetTall() / 2)
 
-        local use = vgui.Create("DButton", buttonPanel)
+        local use = vgui.Create("gakButton", buttonPanel)
         use:SetText("Use")
         use:Dock(FILL)
         use:SetTall(buttonPanel:GetTall() / 2)

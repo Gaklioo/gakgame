@@ -61,6 +61,12 @@ function gSkillTree.openPanel(data)
         upgradeButton:SetText("Upgrade")
         upgradeButton:Dock(RIGHT)
 
+        upgradeButton.Paint = function(self, w, h)
+            draw.RoundedBox(6, 0, 0, w, h, Color(60, 60, 60))
+            surface.SetDrawColor(Color(69, 134, 253))
+            surface.DrawOutlinedRect(0, 0, w, h, 2)
+        end
+
         local abilityLabel = vgui.Create("DLabel", abilityPanel)
         abilityLabel:SetText(entry.ability .. " (Level " .. entry.level .. ")" .. " Xp Required " .. ((entry.level + 1) * 1000))
         abilityLabel:Dock(FILL)
