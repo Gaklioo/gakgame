@@ -1,7 +1,6 @@
 AddCSLuaFile("cl_init.lua")
 AddCSLuaFile("shared.lua")
 include("shared.lua")
-print("Loaded Ent")
 
 function ENT:Initialize()
     self:SetModel("models/props_junk/cardboard_box003a_gib01.mdl")
@@ -102,7 +101,6 @@ hook.Add("PlayerDeath", "GakGame_CreateBackpack", function(ply)
         if not ply:IsPlayer() then return end
 
         local inv = ply:GetInventory()
-        printInv(inv)
 
         if table.IsEmpty(inv) then
             ply:ResetInventory()

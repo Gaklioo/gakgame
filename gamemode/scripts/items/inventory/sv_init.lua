@@ -11,6 +11,10 @@ hook.Add("GakGame_RegisterItem", "GakGame_ItemRegister", function(item)
     gItems.Register(item)
 end)
 
+hook.Add("GakGame_GetItems", "GakGame_GetAllRegisteredItems", function()
+    return gItems.ItemList
+end)
+
 hook.Add("GakGame_InitializeSQL", "GakGame_InventorySQL", function()
     local str = string.format("CREATE TABLE %s (id TEXT PRIMARY KEY, inventory TEXT)",
     gItems.Database
@@ -152,14 +156,13 @@ function gItems.P:ResetInventory()
     self.Inventory = {}
 end
 
-function gItems.P:UseItem(itemID)
-    local item = self.Inventory[itemID]
+function gItems.P:NotifyFailureItem(itemID)
     if not self.Inventory[itemID] then
         local str = "Unable to remove item, item not found in inventory"
         net.Start("GakGame_Notify")
         net.WriteString(str)
         net.Send(self)
-        return 
+        return true
     end
 
     if not gItems.ItemList[itemID] then
@@ -167,8 +170,16 @@ function gItems.P:UseItem(itemID)
         net.Start("GakGame_Notify")
         net.WriteString(str)
         net.Send(self)
-        return 
+        return true
     end
+
+    return false
+end
+
+function gItems.P:UseItem(itemID)
+    local item = self.Inventory[itemID]
+
+    if self:NotifyFailureItem(itemID) then return end
 
     gItems.ItemList[itemID].use(self)
     if item.count == 1 then
@@ -178,6 +189,32 @@ function gItems.P:UseItem(itemID)
     end
 
     self:SyncInventory()
+end
+
+function gItems.P:DropItem(itemID)
+    local item = self.Inventory[itemID]
+    if self:NotifyFailureItem(itemID) then return end
+
+    local model = gItems.ItemList[itemID].model
+    local pos = self:GetPos() + Vector(50, 0, 0)
+    local ang = self:GetAngles()
+
+    local ent = ents.Create("droppeditem")
+    if item.count == 1 then
+        self.Inventory[itemID] = nil 
+    else
+        item.count = item.count - 1
+    end
+
+    ent:SetPos(pos)
+    ent:SetAngles(ang)
+
+    ent:Spawn()
+    ent:SetID(itemID)
+    ent:SetItem(item)
+    if model then
+        ent:SetModel(model)
+    end
 end
 
 function gItems.P:SaveInventory()
@@ -209,4 +246,12 @@ net.Receive("GakGame_UseItem", function(len, ply)
     local tbl = util.JSONToTable(str)
 
     ply:UseItem(tbl.id)
+end)
+
+util.AddNetworkString("GakGame_DropItem")
+net.Receive("GakGame_DropItem", function(len, ply)
+    local str = net.ReadString()
+    local tbl = util.JSONToTable(str)
+
+    ply:DropItem(tbl.id)
 end)

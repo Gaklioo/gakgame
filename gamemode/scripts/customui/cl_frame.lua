@@ -64,21 +64,4 @@ function gakFrame.Panel:Paint(w, h)
     end
 end
 
-hook.Add("OnPlayerChat", "jlkasdcvjlkasc", function()
-    local frame = vgui.Create("gakFrame")
-    frame:SetSize(500, 250)
-    frame:Center()
-    frame:SetHeader("Gak UI")
-
-    local button = vgui.Create("gakButton", frame.Content)
-    button:SetText("Click!")
-    button:SetSize(75, 25)
-    button:Dock(FILL)
-    button.DoClick = function()
-        print("HI:)")
-    end
-
-
-end)
-
 gakUI.register("gakFrame", gakFrame.Panel, "DFrame")

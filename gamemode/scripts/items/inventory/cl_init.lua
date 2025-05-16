@@ -30,7 +30,7 @@ function gItems.openGUI()
     gItems.Panel:DrawNoHeader()
 
     local invPanel = vgui.Create("gakPanel", gItems.Panel)
-    invPanel:SetSize(x / 3, y / 1.2)
+    invPanel:SetSize(x / 7, y / 1.2)
     invPanel:SetPos(x / 20, y / 10)
 
     local inv = vgui.Create("DScrollPanel", invPanel)
@@ -39,7 +39,7 @@ function gItems.openGUI()
     for k, v in pairs(LocalPlayer():GetInventory()) do
         local panel = vgui.Create("gakPanel")
         panel:Dock(FILL)
-        panel:SetHeight(y / 10)
+        panel:SetSize(x / 5, y / 10)
 
         panel.Paint = function(self, w, h)
             draw.RoundedBox(2, 0, 0 , w, h, Color(180, 180, 180, 220))
@@ -58,13 +58,25 @@ function gItems.openGUI()
         local use = vgui.Create("gakButton", buttonPanel)
         use:SetText("Use")
         use:Dock(FILL)
-        use:SetTall(buttonPanel:GetTall() / 2)
 
         use.DoClick = function()
             local str = util.TableToJSON(v)
             net.Start("GakGame_UseItem")
             net.WriteString(str)
             net.SendToServer()
+
+            gItems.Panel:Remove()
+            gItems.Panel = nil
+        end
+
+        drop.DoClick = function()
+            local str = util.TableToJSON(v)
+            net.Start("GakGame_DropItem")
+            net.WriteString(str)
+            net.SendToServer()
+
+            gItems.Panel:Remove()
+            gItems.Panel = nil
         end
 
         if v.icon then

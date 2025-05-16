@@ -17,19 +17,12 @@ gDroppedBackpack.Panel = {}
 gDroppedBackpack.Entity = {}
 
 function gDroppedBackpack.OpenPanel(tbl)
-    gDroppedBackpack.Panel = vgui.Create("DFrame")
+    gDroppedBackpack.Panel = vgui.Create("gakFrame")
     local panel = gDroppedBackpack.Panel
     local x, y = ScrW(), ScrH()
 
     panel:SetSize(x / 2, y / 2)
-    panel:SetTitle("")
     panel:Center()
-    panel:SetDraggable(false)
-    panel:MakePopup()
-
-    panel.Paint = function(self, w, h)
-        draw.RoundedBox(2, 0, 0, w, h, Color(0, 0, 0, 180))
-    end
 
     local scrl = vgui.Create("DScrollPanel", panel)
     scrl:Dock(FILL)
@@ -40,7 +33,7 @@ function gDroppedBackpack.OpenPanel(tbl)
 
         pnl:SetStoredItem(v)
 
-        local take = vgui.Create("DButton", pnl)
+        local take = vgui.Create("gakButton", pnl)
         take:SetText("Take")
         take:Dock(RIGHT)
 

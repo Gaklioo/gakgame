@@ -38,4 +38,4 @@ function gakButton.Panel:Paint(w, h)
     draw.SimpleText(text, "GakText", w / 2, (h - textH) / 2, gakUI.Colors.text, TEXT_ALIGN_CENTER, TEXT_ALIGN_TOP)
 end
 
-vgui.Register("gakButton", gakButton.Panel, "DPanel")
+gakUI.register("gakButton", gakButton.Panel, "DPanel")
