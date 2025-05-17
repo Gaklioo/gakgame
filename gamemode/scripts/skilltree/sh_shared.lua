@@ -115,7 +115,13 @@ gSkillTree.XPHooks = {
         {args = 1, xpGiven = 10}
     },
     ["PlayerDeath"] = {
-        {args = 1, xpGiven = 50}
+        {args = 1, xpGiven = 5000}
+    },
+    ["PlayerAuthed"] = {
+        {args = 1, xpGiven = 15}
+    },
+    ["PlayerHurt"] = {
+        {args = 2, xpGiven = 50}
     }
 }
 

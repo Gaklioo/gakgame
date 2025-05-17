@@ -9,7 +9,7 @@ function ENT:Draw()
     local text = self:GetNW2String("ItemName")
     ang:RotateAroundAxis(ang:Up(), 270)
 
-    cam.Start3D2D(pos, ang, 0.5)
+    cam.Start3D2D(pos, ang, 0.1)
         draw.SimpleText(text, "DermaLarge", 0, 0, color_white, TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER)
     cam.End3D2D()
 end

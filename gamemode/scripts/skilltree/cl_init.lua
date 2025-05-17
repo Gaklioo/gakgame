@@ -78,6 +78,11 @@ function gSkillTree.openPanel(data)
             net.WriteString(entry.ability)
             net.WriteUInt(entry.level, 32)
             net.SendToServer()
+
+            gSkillTree.Panel:Remove()
+            gSkillTree.Panel = nil 
+            net.Start("GakGame_SkillTreeGet")
+            net.SendToServer()
         end
 
         abilityLabel.Paint = function(self, w, h)
