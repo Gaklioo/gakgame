@@ -103,10 +103,8 @@ hook.Add("Think", "GakGame_InvCheck", function()
     if not LocalPlayer():Alive() and gItems.Panel then
         gItems.Panel:Remove()
     end
-end)
 
-hook.Add("Move", "GakGame_OpenInvKey", function()
-    if input.WasKeyPressed(KEY_TAB) then
+    if input.IsKeyDown(KEY_TAB) then
         net.Start("GakGame_GetInventory")
         net.SendToServer()
 
