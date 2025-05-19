@@ -99,12 +99,14 @@ function gItems.startInventory()
     end 
 end
 
+gItems.Next = nil
 hook.Add("Think", "GakGame_InvCheck", function()
     if not LocalPlayer():Alive() and gItems.Panel then
         gItems.Panel:Remove()
     end
 
-    if input.IsKeyDown(KEY_TAB) then
+    if input.IsKeyDown(KEY_TAB) and ((gItems.Next or 1) < CurTime()) then
+        gItems.Next = CurTime() + 0.5
         net.Start("GakGame_GetInventory")
         net.SendToServer()
 
