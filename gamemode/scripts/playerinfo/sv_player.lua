@@ -8,6 +8,7 @@ end
 
 function _P:Load()
     hook.Run("GakGame_LoadPlayer", self)
+    hook.Run("GakGame_LoadEconomy", self)
 end
 
 hook.Add("PlayerInitialSpawn", "GakGame_PlayerJoin", function(ply)

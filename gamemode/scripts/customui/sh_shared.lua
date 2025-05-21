@@ -23,6 +23,8 @@ gakUI.Colors = {
     accent = Color(170, 100, 255, 180)
 }
 
+if CLIENT then
+    
 surface.CreateFont("GakText", {
     font = "Arial",
     size = 15,
@@ -36,3 +38,5 @@ surface.CreateFont("GakButtonText", {
     weight = 500,
     antialias = true
 })
+
+end

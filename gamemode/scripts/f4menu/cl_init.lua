@@ -96,6 +96,17 @@ function gMenu.OpenSkills(data)
     end
 end
 
+net.Receive("GakGame_RecieveEntities", function()
+    local str = net.ReadString()
+    local tbl = util.JSONToTable(str)
+
+    gMenu.OpenEntities(tbl)
+end)
+
+function gMenu.OpenEntities(tbl)
+
+end
+
 function gMenu.openMenu()
     local x, y = ScrW(), ScrH()
     gMenu.Panel = vgui.Create("gakFrame")
@@ -113,13 +124,27 @@ function gMenu.openMenu()
     scrollBar:DockMargin(0, 0, 0, 0)
 
     local skillsPanel = vgui.Create("gakButton", scrollBar)
-    skillsPanel:Dock(FILL)
     skillsPanel:SetText("Skills")
+    skillsPanel:Dock(TOP)
+    skillsPanel:DockMargin(0, 0, 0, 5)
 
     skillsPanel.DoClick = function()
         net.Start("GakGame_SkillTreeGet")
         net.SendToServer()
     end
+
+    local entityPanel = vgui.Create("gakButton", scrollBar)
+    entityPanel:SetText("Entities")
+    entityPanel:Dock(TOP)
+    entityPanel:DockMargin(0, 0, 0, 5)
+
+    entityPanel.DoClick = function()
+        net.Start("GakGame_GetEntities")
+        net.SendToServer()
+    end
+
+    scrollBar:AddItem(skillsPanel)
+    scrollBar:AddItem(entityPanel)
 
 end
 
