@@ -15,3 +15,9 @@ function ENT:Initialize()
         phys:Wake()
     end
 end
+
+util.AddNetworkString("GakGame_OpenATM")
+function ENT:Use(act)
+    net.Start("GakGame_OpenATM")
+    net.Send(act)
+end
