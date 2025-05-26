@@ -16,19 +16,35 @@ gTeams.Options = {
     ["Team Upgrades"] = gTeams.DrawUpgrade
 }
 
-function gTeams.DrawManage()
-    print("manage")
+function gTeams.DrawManage(content)
+    local w, h = content:GetSize()
+
+    local header = vgui.Create("gakPanel", content)
+    header:SetTall(h / 20)
+    header:Dock(TOP)
+    header:DockMargin(5, 5, 5, 5)
+
+
+    local invite = vgui.Create("gakButton", header)
+    invite:SetText("Invite")
+    invite:Dock(LEFT)
+    invite:DockMargin(0, 0, 5, 0)
+
+
+    local playerList = vgui.Create("gakButton", header)
+    playerList:SetText("Team List")
+    playerList:Dock(RIGHT)
 end
 
-function gTeams.DrawInfo()
+function gTeams.DrawInfo(content)
 print("manage1")
 end
 
-function gTeams.DrawMoney()
+function gTeams.DrawMoney(content)
 print("manage2")
 end
 
-function gTeams.DrawUpgrade()
+function gTeams.DrawUpgrade(content)
 print("manage3")
 end
 
@@ -39,12 +55,20 @@ function gTeams.DrawFrame()
     gTeams.TeamFrame:Center()
     gTeams.TeamFrame:SetHeader("Gak Teams")
 
-    gTeams.TeamPanel = vgui.Create("gakPanel", gTeams.TeamFrame.Content)
-    gTeams.TeamPanel:SetSize(w / 7, h)
+    local container = vgui.Create("gakPanel", gTeams.TeamFrame.Content)
+    container:Dock(FILL)
+
+    gTeams.TeamPanel = vgui.Create("gakPanel", container)
+    gTeams.TeamPanel:SetWide(w / 4)
+    gTeams.TeamPanel:Dock(LEFT)
 
     local scroll = vgui.Create("DScrollPanel", gTeams.TeamPanel)
+    scroll:Dock(FILL)
     scroll:SetSize(w / 7, h)
     scroll:DockMargin(5, 5, 5, 5)
+
+    local content = vgui.Create("gakPanel", container)
+    content:Dock(FILL)
 
     for option, func in pairs(gTeams.Options) do
         local button = vgui.Create("gakButton", scroll)
@@ -52,7 +76,7 @@ function gTeams.DrawFrame()
         button:Dock(TOP)
 
         button.DoClick = function()
-            func()
+            func(content)
         end
 
         scroll:Add(button)

@@ -27,6 +27,7 @@ gTeams.Team.BaseEntities = 50
 gTeams.Team.BaseSlots = 25
 gTeams.Team.Name = ""
 gTeams.Team.Leader = nil 
+gTeams.Team.PlayerList = {}
 
 function gTeams.CreateTeam(name, leader)
     local team = table.Copy(gTeams.Team)
