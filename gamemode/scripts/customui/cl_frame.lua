@@ -55,8 +55,8 @@ function gakFrame.Panel:Paint(w, h)
     draw.RoundedBox(2, 0, 0, w, h, gakUI.Colors.background)
 
     if self.DrawHeader then
-        draw.RoundedBox(2, 0, 0, w, h / 10, gakUI.Colors.panel)
-        draw.SimpleText(self.title, "GakText", w / 2, h / 20, gakUI.Colors.text, TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER)
+        draw.RoundedBox(2, 0, 0, w, h / 8, gakUI.Colors.panel)
+        draw.SimpleText(self.title, "GakText", w / 2, h / 40, gakUI.Colors.text, TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER)
     else
         draw.RoundedBox(2, 0, 0, w, h, gakUI.Colors.panel)
         self.close:Remove()
