@@ -12,13 +12,19 @@ hook.Add("GakGame_InitializeSQL", "GakGame_SetupTeamDatabase", function()
     gTeams.LoadTeamInfo()
 end)
 
+hook.Add("GakGame_LoadTeams", "GakGame_LoadServerTeam", function(ply)
+    ply:InitTeams()
+end)
+
 function gTeams.P:InitTeams()
     self.Rank = ""
-    self.Team = ""
+    self.gTeam = ""
 
     local id = self:SteamID()
 
-    self.Team, self.Rank = gTeams.GetPlayersTeam(id)
+    self.gTeam, self.Rank = gTeams.GetPlayersTeam(id)
+
+    print(self.gTeam, self.Rank)
 end
 
 function gTeams.CreateDatabase()
@@ -77,6 +83,10 @@ function gTeams.P:GetRank()
     return self.Rank
 end
 
+function gItems.P:GetTeam()
+    return self.gTeam
+end
+
 function gTeams.CheckInvite(ply)
     local rank = ply.Rank
     local rankInfo = gTeams.Ranks[rank]
@@ -87,14 +97,14 @@ end
 function gTeams.CheckTeam(ply)
     if not IsValid(ply) then return end
 
-    return ply.Team
+    return ply.gTeam
 end
 
 function gTeams.GetPlayersTeam(id)
-    for team, teamData in pairs(gTeams.TeamInfo) do
+    for teams, teamData in pairs(gTeams.TeamInfo) do
         for _, playerID in pairs(teamData.PlayerList) do
             if playerID.steamID == id then
-                return team, playerID.rank
+                return teams, playerID.rank
             end
         end
     end
@@ -104,6 +114,17 @@ end
 
 hook.Add("GakGame_GetTeam", "GakGame_GetTeamServer", function(ply)
     return ply:GetRank()    
+end)
+
+util.AddNetworkString("GakGame_RecieveTeam")
+util.AddNetworkString("GakGame_GetTeam")
+net.Receive("GakGame_GetTeam", function(len, ply)
+    if not IsValid(ply) then return end
+    if not ply:IsPlayer() then return end
+
+    net.Start("GakGame_RecieveTeam")
+    net.WriteString(ply.gTeam)
+    net.Send(ply)
 end)
 
 util.AddNetworkString("GakGame_CreateTeam")
@@ -135,15 +156,15 @@ net.Receive("GakGame_InviteTeam", function(len, ply)
 
 
     net.Start("GakGame_InviteTeamClient")
-    net.WriteString(ply.Team)
+    net.WriteString(ply.gTeam)
     net.Send(invitee)
 
-    gTeams.Invitee[invitee] = ply.Team
+    gTeams.Invitee[invitee] = ply.gTeam
 end)
 
-function gTeams.AddToTeam(team, ply)
+function gTeams.AddToTeam(teams, ply)
     local newAdd = {steamID = ply:SteamID(), rank = "Recruit"}
-    table.insert(team.PlayerList, newAdd)
+    table.insert(teams.PlayerList, newAdd)
 end
 
 util.AddNetworkString("GakGame_InviteResponse")
@@ -155,10 +176,10 @@ net.Receive("GakGame_InviteResponse", function(len, ply)
     if not gTeams.Invitee[ply] then return end
 
     if response then
-        local team = gTeams.Invitee[ply]
+        local teams = gTeams.Invitee[ply]
 
-        gTeams.AddToTeam(team, ply)
-        ply.Team = team
+        gTeams.AddToTeam(teams, ply)
+        ply.gTeam = teams
 
         gTeams.Invitee[ply] = nil
     end

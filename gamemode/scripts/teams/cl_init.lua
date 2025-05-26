@@ -6,6 +6,16 @@ Team Info (Entity Max, Player Max, Current balance)
 Money (Withdraw Money, Deposit Money)
 Upgrades (More Entities, More Max Players, Interest multiplier [Base is 0.05, each upgrade is 0.05 with scaling costs]
 ]]
+gTeams.Player = FindMetaTable("Player")
+
+function gTeams.Player:SetTeam(team)
+    self.gTeam = gTeam
+end
+
+function gTeams.Player:GetTeam()
+    return self.gTeam
+end
+
 gTeams.TeamFrame = {}
 gTeams.TeamPanel = {}
 
@@ -16,8 +26,31 @@ gTeams.Options = {
     ["Team Upgrades"] = gTeams.DrawUpgrade
 }
 
+function gTeams.DrawNoTeam(content)
+    local w, h = content:GetSize()
+    local header = vgui.Create("gakPanel", content)
+    header:SetTall(h / 15)
+    header:Dock(TOP)
+    header:DockMargin(5, 5, 5, 5)
+
+    local createTeam = vgui.Create("gakButton", header)
+    createTeam:SetText("Create Team")
+    createTeam:SetSize(100, 30)
+    createTeam:SizeToContents()
+    createTeam:SetPos((w - createTeam:GetWide()) / 2, 0)
+
+    header:SizeToContents()
+end
+
 function gTeams.DrawManage(content)
     local w, h = content:GetSize()
+
+    print(LocalPlayer():GetTeam())
+
+    if (LocalPlayer():GetTeam() == "") or (LocalPlayer():GetTeam() == nil) then
+        gTeams.DrawNoTeam(content)
+        return
+    end
 
     local header = vgui.Create("gakPanel", content)
     header:SetTall(h / 20)
@@ -83,8 +116,17 @@ function gTeams.DrawFrame()
     end
 end
 
+net.Receive("GakGame_RecieveTeam", function()
+    local gTeam = net.ReadString()
+
+    LocalPlayer():SetTeam(gTeam)
+end)
+
 hook.Add("OnPlayerChat", "GakGame_TeamStuff", function(ply, text)
     if text != "/team" then return end
+
+    net.Start("GakGame_GetTeam")
+    net.SendToServer()
 
     gTeams.DrawFrame()
 end)
