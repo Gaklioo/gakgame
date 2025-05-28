@@ -2,185 +2,84 @@ AddCSLuaFile("cl_init.lua")
 AddCSLuaFile("sh_shared.lua")
 include("sh_shared.lua")
 
-gTeams.TeamInfo = {}
-gTeams.PlayerTeams = {}
-gTeams.P = FindMetaTable("Player")
-
-hook.Add("GakGame_InitializeSQL", "GakGame_SetupTeamDatabase", function()
-    gTeams.CreateDatabase()
-
-    gTeams.LoadTeamInfo()
-end)
-
-hook.Add("GakGame_LoadTeams", "GakGame_LoadServerTeam", function(ply)
-    ply:InitTeams()
-end)
-
-function gTeams.P:InitTeams()
-    self.Rank = ""
-    self.gTeam = ""
-
-    local id = self:SteamID()
-
-    self.gTeam, self.Rank = gTeams.GetPlayersTeam(id)
-
-    print(self.gTeam, self.Rank)
-end
-
-function gTeams.CreateDatabase()
-    local str = string.format("CREATE TABLE %s (teamName varchar(255) PRIMARY KEY, information TEXT)",
-    gTeams.Database
-    )
-
-    if not sql.TableExists(gTeams.Database) then
-        sql.Begin()
-        sql.Query(str)
-        sql.Commit()
-    end
-end
-
-function gTeams.LoadTeamInfo()
-    local str = string.format("SELECT * FROM %s",
-    gTeams.Database    
-    )
-
-    local qry = sql.Query(str)
-
-    if qry == true then
-        for k, v in pairs(qry) do
-            local teamName = v.teamName
-            local teamInfo = util.JSONToTable(v.information)
-
-            local tbl = {[teamName] = teamInfo}
-
-            gTeams.TeamInfo[teamName] = teamInfo 
-        end
-    else
-        print(sql.LastError())
-    end
-end
-
-function gTeams.SaveTeams()
-    for teamName, teamData in pairs(gTeams.TeamInfo) do
-        local save = util.TableToJSON(teamData)
-
-        local str = string.format("REPLACE INTO %s VALUES('%s', '%s');",
-        gTeams.Database,
-        sql.SQLStr(teamName, true),
-        sql.SQLStr(save, true)
-        )
-
-        sql.Query(str)
-    end
-end
-
-function gTeams.P:ChangeRank(rank)
-    if not gTeams.BasicRank[rank] then return end
-    self.Rank = rank
-end
-
-function gTeams.P:GetRank()
-    return self.Rank
-end
-
-function gItems.P:GetTeam()
-    return self.gTeam
-end
-
-function gTeams.CheckInvite(ply)
-    local rank = ply.Rank
-    local rankInfo = gTeams.Ranks[rank]
-
-    return rankInfo and rankInfo.canInvite == true
-end
-
-function gTeams.CheckTeam(ply)
-    if not IsValid(ply) then return end
-
-    return ply.gTeam
-end
-
-function gTeams.GetPlayersTeam(id)
-    for teams, teamData in pairs(gTeams.TeamInfo) do
-        for _, playerID in pairs(teamData.PlayerList) do
-            if playerID.steamID == id then
-                return teams, playerID.rank
-            end
-        end
-    end
-
-    return "", ""
-end
-
-hook.Add("GakGame_GetTeam", "GakGame_GetTeamServer", function(ply)
-    return ply:GetRank()    
-end)
-
-util.AddNetworkString("GakGame_RecieveTeam")
-util.AddNetworkString("GakGame_GetTeam")
-net.Receive("GakGame_GetTeam", function(len, ply)
-    if not IsValid(ply) then return end
-    if not ply:IsPlayer() then return end
-
-    net.Start("GakGame_RecieveTeam")
-    net.WriteString(ply.gTeam)
-    net.Send(ply)
-end)
-
 util.AddNetworkString("GakGame_CreateTeam")
 net.Receive("GakGame_CreateTeam", function(len, ply)
-    local rank = ply:GetRank()
-    if rank then return end
-    if gTeams.Ranks[rank] then return end
-    if not IsValid(ply) then return end
-
     local teamName = net.ReadString()
-    local newTeam = gTeams.CreateTeam(teamName, ply)
 
-    gTeams.TeamInfo[teamName] = newTeam
+    if gTeams.Teams[teamName] then gTeams.Notify(ply, "Team Already Exists") return end
+    if not teamName then return end
+
+    local newTeam = gTeams.CreateTeam(teamName, ply:SteamID())
+
+    if newTeam then
+        ply:SetgTeam(teamName)
+        return 
+    else
+        gTeams.Notify(ply, "Failed to create new team")
+    end
 end)
 
-gTeams.Invitee = {}
+local pendingResponse = {}
 
-util.AddNetworkString("GakGame_InviteTeamClient")
-util.AddNetworkString("GakGame_InviteTeam")
-net.Receive("GakGame_InviteTeam", function(len, ply)
-    local invitee = net.ReadPlayer()
+function runInvite(ply, invited)
+    local co = coroutine.create(function()
+        net.Start("GakGame_InviteeRequest")
+        net.Send(invited)
 
-    if not IsValid(ply) then return end
-    if not ply.Rank then return end
-    if not gTeams.CheckInvite(ply) then return end
+        local response = coroutine.yield("GakGame_WaitResponse", invited)
 
-    if not IsValid(invitee) then return end
-    if invitee.Team == "" then hook.Run("GakGame_NotifyPlayer", ply, "Cannot invite someone who is already in team") return end
+        print(response)
 
+        if response == "yes" then
+            --Add to team
+        else
+            pendingResponse[invited] = nil
+        end
+    end)
 
-    net.Start("GakGame_InviteTeamClient")
-    net.WriteString(ply.gTeam)
-    net.Send(invitee)
+    local ok, wait, target = coroutine.resume(co)
 
-    gTeams.Invitee[invitee] = ply.gTeam
-end)
-
-function gTeams.AddToTeam(teams, ply)
-    local newAdd = {steamID = ply:SteamID(), rank = "Recruit"}
-    table.insert(teams.PlayerList, newAdd)
+    if wait == "GakGame_WaitResponse" then
+        pendingResponse[target] = {
+            coroutine = co
+        }
+    end
 end
 
-util.AddNetworkString("GakGame_InviteResponse")
-net.Receive("GakGame_InviteResponse", function(len, ply)
-    local response = net.ReadBool()
-    if not IsValid(response) then return end
-    if not IsValid(ply) then return end
+concommand.Add("Sigma", function(ply)
+    runInvite(ply, ply)
+end)
 
-    if not gTeams.Invitee[ply] then return end
+util.AddNetworkString("GakGame_InvitePlayer")
+util.AddNetworkString("GakGame_InviteeRequest")
+util.AddNetworkString("GakGame_InviteeResponse")
+net.Receive("GakGame_InvitePlayer", function(len, ply)
+    local playerTeam = gTeams.Teams[ply:GetNW2String("TeamName")]
+    local invited = net.ReadPlayer()
+    if not IsValid(invited) then return end
+    if not invited:IsPlayer() then return end
 
-    if response then
-        local teams = gTeams.Invitee[ply]
+    if invited:GetNW2String("TeamName") != "nTeam" then return end
 
-        gTeams.AddToTeam(teams, ply)
-        ply.gTeam = teams
 
-        gTeams.Invitee[ply] = nil
+    if not playerTeam then return end
+    local id = ply:SteamID()
+    local rank = playerTeam:CheckRank(id)
+
+    if rank == "Commander" or rank == "Officer" then
+        runInvite(ply, invited)
+    end
+end)
+
+net.Receive("GakGame_InviteeResponse", function(len, ply)
+    local res = net.ReadString()
+
+    local pending = pendingResponse[ply]
+
+    print(res)
+
+    if pending and coroutine.status(pending.coroutine) == "suspended" then
+        coroutine.resume(pending.coroutine, res)
+        pendingResponse[ply] = nil
     end
 end)
